@@ -1,0 +1,80 @@
+buildscript {
+    repositories {
+        maven {
+            name = 'forge'
+            url = 'http://files.minecraftforge.net/maven'
+        }
+
+        maven { url 'https://plugins.gradle.org/m2' }
+    }
+
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.+', changing: true
+        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.2"
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = targetCompatibility = '1.8'
+
+version = '0.0.1'
+
+repositories {
+    maven { url 'https://jitpack.io' }
+
+    flatDir {
+        dirs '../Libraries/'
+    }
+}
+
+minecraft {
+    mappings channel: 'snapshot', version: '20180814-1.12'
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2854'
+
+    shadow group: 'com.github.Pixelmon-Development.API', name: 'commons', version: '0.2.0'
+    shadow group: 'com.github.Pixelmon-Development.API', name: 'forge', version: '0.2.0'
+
+    implementation fg.deobf('com.pixelmonmod.pixelmon:Pixelmon-1.12.2-8.2.0-server:0.0.1')
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+    archiveName = rootProject.name + '.jar'
+
+    relocate('org.spongepowered.configurate', 'com.envyful.boss.spawn.rates.forge.shade.configurate')
+    relocate('org.yaml.snakeyaml', 'com.envyful.boss.spawn.rates.forge.shade.snakeyaml')
+    relocate('io.leangen.geantyref', 'com.envyful.boss.spawn.rates.forge.shade.geantyref')
+    relocate('com.google.gson', 'com.envyful.boss.spawn.rates.forge.shade.gson')
+    relocate('com.zaxxer', 'com.envyful.boss.spawn.rates.forge.shade.hikari')
+    relocate('org.slf4j', 'com.envyful.boss.spawn.rates.forge.shade.slf4j')
+    relocate('com.envyful.api', 'com.envyful.boss.spawn.rates.forge.shade.envy.api')
+    relocate('org.bstats', 'com.envyful.boss.spawn.rates.forge.shade.bstats')
+
+
+    exclude "**/module-info.class"
+}
+
+configurations {
+    provided
+    compile.extendsFrom provided
+    compileJava.options.encoding = "UTF-8"
+    jar.archiveName = rootProject.name + '.jar'
+    compileJava.options.fork = true
+}
+
+reobf {
+    shadowJar {
+        classpath = sourceSets.main.compileClasspath
+    }
+}
+
+jar.finalizedBy('reobfJar')
